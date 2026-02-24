@@ -21,8 +21,6 @@ use super::{OutputFormat, format_decimal, truncate};
 /// Base64-encoded empty cursor returned by the CLOB API when there are no more pages.
 const END_CURSOR: &str = "LTE=";
 
-// --- Ok ---
-
 pub fn print_ok(result: &str, output: &OutputFormat) {
     match output {
         OutputFormat::Table => println!("CLOB API: {result}"),
@@ -35,8 +33,6 @@ pub fn print_ok(result: &str, output: &OutputFormat) {
     }
 }
 
-// --- Price ---
-
 pub fn print_price(result: &PriceResponse, output: &OutputFormat) {
     match output {
         OutputFormat::Table => println!("Price: {}", result.price),
@@ -48,8 +44,6 @@ pub fn print_price(result: &PriceResponse, output: &OutputFormat) {
         }
     }
 }
-
-// --- Batch Prices ---
 
 pub fn print_batch_prices(result: &PricesResponse, output: &OutputFormat) {
     match output {
@@ -102,8 +96,6 @@ pub fn print_batch_prices(result: &PricesResponse, output: &OutputFormat) {
     }
 }
 
-// --- Midpoint ---
-
 pub fn print_midpoint(result: &MidpointResponse, output: &OutputFormat) {
     match output {
         OutputFormat::Table => println!("Midpoint: {}", result.mid),
@@ -115,8 +107,6 @@ pub fn print_midpoint(result: &MidpointResponse, output: &OutputFormat) {
         }
     }
 }
-
-// --- Midpoints ---
 
 pub fn print_midpoints(result: &MidpointsResponse, output: &OutputFormat) {
     match output {
@@ -154,8 +144,6 @@ pub fn print_midpoints(result: &MidpointsResponse, output: &OutputFormat) {
     }
 }
 
-// --- Spread ---
-
 pub fn print_spread(result: &SpreadResponse, output: &OutputFormat) {
     match output {
         OutputFormat::Table => println!("Spread: {}", result.spread),
@@ -168,8 +156,6 @@ pub fn print_spread(result: &SpreadResponse, output: &OutputFormat) {
         }
     }
 }
-
-// --- Spreads ---
 
 pub fn print_spreads(result: &SpreadsResponse, output: &OutputFormat) {
     match output {
@@ -210,8 +196,6 @@ pub fn print_spreads(result: &SpreadsResponse, output: &OutputFormat) {
         }
     }
 }
-
-// --- Order Book ---
 
 fn order_book_to_json(book: &OrderBookSummaryResponse) -> serde_json::Value {
     let bids: Vec<_> = book
@@ -301,8 +285,6 @@ pub fn print_order_book(result: &OrderBookSummaryResponse, output: &OutputFormat
     }
 }
 
-// --- Order Books (batch) ---
-
 pub fn print_order_books(result: &[OrderBookSummaryResponse], output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -324,8 +306,6 @@ pub fn print_order_books(result: &[OrderBookSummaryResponse], output: &OutputFor
     }
 }
 
-// --- Last Trade ---
-
 pub fn print_last_trade(result: &LastTradePriceResponse, output: &OutputFormat) {
     match output {
         OutputFormat::Table => println!("Last Trade: {} ({})", result.price, result.side),
@@ -341,8 +321,6 @@ pub fn print_last_trade(result: &LastTradePriceResponse, output: &OutputFormat) 
         }
     }
 }
-
-// --- Last Trades Prices (batch) ---
 
 pub fn print_last_trades_prices(result: &[LastTradesPricesResponse], output: &OutputFormat) {
     match output {
@@ -386,8 +364,6 @@ pub fn print_last_trades_prices(result: &[LastTradesPricesResponse], output: &Ou
         }
     }
 }
-
-// --- CLOB Market ---
 
 pub fn print_clob_market(result: &MarketResponse, output: &OutputFormat) {
     match output {
@@ -434,8 +410,6 @@ pub fn print_clob_market(result: &MarketResponse, output: &OutputFormat) {
     }
 }
 
-// --- CLOB Markets ---
-
 pub fn print_clob_markets(result: &Page<MarketResponse>, output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -475,8 +449,6 @@ pub fn print_clob_markets(result: &Page<MarketResponse>, output: &OutputFormat) 
         }
     }
 }
-
-// --- Simplified Markets ---
 
 pub fn print_simplified_markets(result: &Page<SimplifiedMarketResponse>, output: &OutputFormat) {
     match output {
@@ -523,8 +495,6 @@ pub fn print_simplified_markets(result: &Page<SimplifiedMarketResponse>, output:
     }
 }
 
-// --- Tick Size ---
-
 pub fn print_tick_size(result: &TickSizeResponse, output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -541,8 +511,6 @@ pub fn print_tick_size(result: &TickSizeResponse, output: &OutputFormat) {
         }
     }
 }
-
-// --- Fee Rate ---
 
 pub fn print_fee_rate(result: &FeeRateResponse, output: &OutputFormat) {
     match output {
@@ -561,8 +529,6 @@ pub fn print_fee_rate(result: &FeeRateResponse, output: &OutputFormat) {
     }
 }
 
-// --- Neg Risk ---
-
 pub fn print_neg_risk(result: &NegRiskResponse, output: &OutputFormat) {
     match output {
         OutputFormat::Table => println!("Neg risk: {}", result.neg_risk),
@@ -574,8 +540,6 @@ pub fn print_neg_risk(result: &NegRiskResponse, output: &OutputFormat) {
         }
     }
 }
-
-// --- Price History ---
 
 pub fn print_price_history(result: &PriceHistoryResponse, output: &OutputFormat) {
     match output {
@@ -616,8 +580,6 @@ pub fn print_price_history(result: &PriceHistoryResponse, output: &OutputFormat)
     }
 }
 
-// --- Server Time ---
-
 pub fn print_server_time(timestamp: i64, output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -641,8 +603,6 @@ pub fn print_server_time(timestamp: i64, output: &OutputFormat) {
     }
 }
 
-// --- Geoblock ---
-
 pub fn print_geoblock(result: &GeoblockResponse, output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -665,8 +625,6 @@ pub fn print_geoblock(result: &GeoblockResponse, output: &OutputFormat) {
         }
     }
 }
-
-// --- Orders ---
 
 pub fn print_orders(result: &Page<OpenOrderResponse>, output: &OutputFormat) {
     match output {
@@ -738,8 +696,6 @@ pub fn print_orders(result: &Page<OpenOrderResponse>, output: &OutputFormat) {
     }
 }
 
-// --- Order Detail ---
-
 pub fn print_order_detail(result: &OpenOrderResponse, output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -783,8 +739,6 @@ pub fn print_order_detail(result: &OpenOrderResponse, output: &OutputFormat) {
     }
 }
 
-// --- Post Order Result ---
-
 fn post_order_to_json(r: &PostOrderResponse) -> serde_json::Value {
     let tx_hashes: Vec<_> = r
         .transaction_hashes
@@ -826,8 +780,6 @@ pub fn print_post_order_result(result: &PostOrderResponse, output: &OutputFormat
     }
 }
 
-// --- Post Orders Result (batch) ---
-
 pub fn print_post_orders_result(results: &[PostOrderResponse], output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -844,8 +796,6 @@ pub fn print_post_orders_result(results: &[PostOrderResponse], output: &OutputFo
         }
     }
 }
-
-// --- Cancel Result ---
 
 pub fn print_cancel_result(result: &CancelOrdersResponse, output: &OutputFormat) {
     match output {
@@ -872,8 +822,6 @@ pub fn print_cancel_result(result: &CancelOrdersResponse, output: &OutputFormat)
         }
     }
 }
-
-// --- Trades ---
 
 pub fn print_trades(result: &Page<TradeResponse>, output: &OutputFormat) {
     match output {
@@ -943,8 +891,6 @@ pub fn print_trades(result: &Page<TradeResponse>, output: &OutputFormat) {
     }
 }
 
-// --- Balance ---
-
 /// USDC uses 6 decimal places on-chain.
 const USDC_DECIMALS: u32 = 6;
 
@@ -983,8 +929,6 @@ pub fn print_balance(
         }
     }
 }
-
-// --- Notifications ---
 
 pub fn print_notifications(result: &[NotificationResponse], output: &OutputFormat) {
     match output {
@@ -1042,8 +986,6 @@ pub fn print_notifications(result: &[NotificationResponse], output: &OutputForma
     }
 }
 
-// --- Rewards ---
-
 pub fn print_rewards(result: &Page<UserEarningResponse>, output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -1099,8 +1041,6 @@ pub fn print_rewards(result: &Page<UserEarningResponse>, output: &OutputFormat) 
     }
 }
 
-// --- Earnings ---
-
 pub fn print_earnings(result: &[TotalUserEarningResponse], output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -1135,8 +1075,6 @@ pub fn print_earnings(result: &[TotalUserEarningResponse], output: &OutputFormat
         }
     }
 }
-
-// --- User Earnings with Markets ---
 
 pub fn print_user_earnings_markets(result: &[UserRewardsEarningResponse], output: &OutputFormat) {
     match output {
@@ -1211,8 +1149,6 @@ pub fn print_user_earnings_markets(result: &[UserRewardsEarningResponse], output
     }
 }
 
-// --- Reward Percentages ---
-
 pub fn print_reward_percentages(result: &RewardsPercentagesResponse, output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -1246,8 +1182,6 @@ pub fn print_reward_percentages(result: &RewardsPercentagesResponse, output: &Ou
         }
     }
 }
-
-// --- Current Rewards ---
 
 pub fn print_current_rewards(result: &Page<CurrentRewardResponse>, output: &OutputFormat) {
     match output {
@@ -1307,8 +1241,6 @@ pub fn print_current_rewards(result: &Page<CurrentRewardResponse>, output: &Outp
         }
     }
 }
-
-// --- Market Reward ---
 
 pub fn print_market_reward(result: &Page<MarketRewardResponse>, output: &OutputFormat) {
     match output {
@@ -1375,8 +1307,6 @@ pub fn print_market_reward(result: &Page<MarketRewardResponse>, output: &OutputF
     }
 }
 
-// --- Order Scoring ---
-
 pub fn print_order_scoring(result: &OrderScoringResponse, output: &OutputFormat) {
     match output {
         OutputFormat::Table => println!("Scoring: {}", result.scoring),
@@ -1388,8 +1318,6 @@ pub fn print_order_scoring(result: &OrderScoringResponse, output: &OutputFormat)
         }
     }
 }
-
-// --- Orders Scoring ---
 
 pub fn print_orders_scoring(result: &OrdersScoringResponse, output: &OutputFormat) {
     match output {
@@ -1421,8 +1349,6 @@ pub fn print_orders_scoring(result: &OrdersScoringResponse, output: &OutputForma
     }
 }
 
-// --- API Keys ---
-
 pub fn print_api_keys(result: &ApiKeysResponse, output: &OutputFormat) {
     // ApiKeysResponse.keys is private with no public accessor — Debug is the only option.
     // Strip the wrapper to show just the key list.
@@ -1444,8 +1370,6 @@ pub fn print_api_keys(result: &ApiKeysResponse, output: &OutputFormat) {
     }
 }
 
-// --- Delete API Key ---
-
 pub fn print_delete_api_key(result: &serde_json::Value, output: &OutputFormat) {
     match output {
         OutputFormat::Table => println!("API key deleted: {result}"),
@@ -1454,8 +1378,6 @@ pub fn print_delete_api_key(result: &serde_json::Value, output: &OutputFormat) {
         }
     }
 }
-
-// --- Create API Key ---
 
 pub fn print_create_api_key(result: &Credentials, output: &OutputFormat) {
     match output {
@@ -1477,8 +1399,6 @@ pub fn print_create_api_key(result: &Credentials, output: &OutputFormat) {
         }
     }
 }
-
-// --- Account Status ---
 
 pub fn print_account_status(result: &BanStatusResponse, output: &OutputFormat) {
     match output {

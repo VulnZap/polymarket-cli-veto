@@ -37,7 +37,6 @@ pub struct ClobArgs {
 
 #[derive(Subcommand)]
 pub enum ClobCommand {
-    // --- Unauthenticated ---
     /// Check CLOB API health
     Ok,
 
@@ -180,7 +179,6 @@ pub enum ClobCommand {
     /// Check geoblock status
     Geoblock,
 
-    // --- Authenticated ---
     /// List open orders (authenticated)
     Orders {
         /// Filter by market condition ID
@@ -497,7 +495,6 @@ pub async fn execute(
     signature_type: Option<&str>,
 ) -> Result<()> {
     match args.command {
-        // --- Unauthenticated commands ---
         ClobCommand::Ok => {
             let client = clob::Client::default();
             let result = client.ok().await?;
@@ -681,7 +678,6 @@ pub async fn execute(
             print_geoblock(&result, &output);
         }
 
-        // --- Authenticated commands ---
         ClobCommand::Orders {
             market,
             asset,
@@ -997,8 +993,6 @@ pub async fn execute(
 mod tests {
     use super::*;
 
-    // ── parse_token_id ──────────────────────────────────────────────
-
     #[test]
     fn parse_token_id_valid_numeric() {
         let id = parse_token_id("12345").unwrap();
@@ -1025,8 +1019,6 @@ mod tests {
         assert!(parse_token_id("-1").is_err());
     }
 
-    // ── parse_token_ids ─────────────────────────────────────────────
-
     #[test]
     fn parse_token_ids_single() {
         let ids = parse_token_ids("100").unwrap();
@@ -1049,8 +1041,6 @@ mod tests {
     fn parse_token_ids_invalid_entry() {
         assert!(parse_token_ids("1,abc,3").is_err());
     }
-
-    // ── parse_date ──────────────────────────────────────────────────
 
     #[test]
     fn parse_date_valid() {

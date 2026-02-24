@@ -178,8 +178,6 @@ mod tests {
         serde_json::from_value(val).unwrap()
     }
 
-    // ── event_status ────────────────────────────────────────────
-
     #[test]
     fn status_closed_overrides_active() {
         let e = make_event(json!({"id": "1", "closed": true, "active": true}));
@@ -203,8 +201,6 @@ mod tests {
         let e = make_event(json!({"id": "1", "closed": false, "active": false}));
         assert_eq!(event_status(&e), "Inactive");
     }
-
-    // ── event_to_row ────────────────────────────────────────────
 
     #[test]
     fn row_missing_optionals_shows_dashes() {

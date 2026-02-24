@@ -170,8 +170,6 @@ mod tests {
         serde_json::from_value(val).unwrap()
     }
 
-    // ── market_status ───────────────────────────────────────────
-
     #[test]
     fn status_closed_overrides_active() {
         let m = make_market(json!({"id": "1", "closed": true, "active": true}));
@@ -195,8 +193,6 @@ mod tests {
         let m = make_market(json!({"id": "1", "closed": false, "active": false}));
         assert_eq!(market_status(&m), "Inactive");
     }
-
-    // ── market_to_row ───────────────────────────────────────────
 
     #[test]
     fn row_missing_optionals_shows_dashes() {

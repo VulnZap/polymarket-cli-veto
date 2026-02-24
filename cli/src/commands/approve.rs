@@ -149,7 +149,6 @@ async fn set(private_key: Option<&str>, output: OutputFormat) -> Result<()> {
     let mut step = 0;
 
     for target in &targets {
-        // ERC-20 USDC approval
         step += 1;
         let label = format!("USDC \u{2192} {}", target.name);
         let tx_hash = usdc
@@ -174,7 +173,6 @@ async fn set(private_key: Option<&str>, output: OutputFormat) -> Result<()> {
             })),
         }
 
-        // ERC-1155 CTF approval
         step += 1;
         let label = format!("CTF  \u{2192} {}", target.name);
         let tx_hash = ctf

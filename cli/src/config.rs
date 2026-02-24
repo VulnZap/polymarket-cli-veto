@@ -157,12 +157,6 @@ mod tests {
         unsafe { std::env::remove_var(var) };
     }
 
-    // ── resolve_key ─────────────────────────────────────────────
-    //
-    // We can only reliably test: (1) flag always wins, (2) env var
-    // beats no-flag. We cannot isolate from the config file in unit
-    // tests, so we test what we can and skip what we can't.
-
     #[test]
     fn resolve_key_flag_overrides_env() {
         let _lock = ENV_LOCK.lock().unwrap();
@@ -178,7 +172,6 @@ mod tests {
         let _lock = ENV_LOCK.lock().unwrap();
         unsafe { set(ENV_VAR, "env_key_value") };
         let (key, source) = resolve_key(None);
-        // Env var should win over config file
         assert_eq!(key.unwrap(), "env_key_value");
         assert!(matches!(source, KeySource::EnvVar));
         unsafe { unset(ENV_VAR) };
@@ -189,12 +182,9 @@ mod tests {
         let _lock = ENV_LOCK.lock().unwrap();
         unsafe { set(ENV_VAR, "") };
         let (_, source) = resolve_key(None);
-        // Should NOT be EnvVar — empty string is skipped
         assert!(!matches!(source, KeySource::EnvVar));
         unsafe { unset(ENV_VAR) };
     }
-
-    // ── resolve_signature_type ──────────────────────────────────
 
     #[test]
     fn resolve_sig_type_flag_overrides_env() {
@@ -217,7 +207,6 @@ mod tests {
         let _lock = ENV_LOCK.lock().unwrap();
         unsafe { unset(SIG_TYPE_ENV_VAR) };
         let result = resolve_signature_type(None);
-        // Will be "proxy" (default) or from config file — either way, not empty
         assert!(!result.is_empty());
     }
 }

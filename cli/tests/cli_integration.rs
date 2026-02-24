@@ -10,8 +10,6 @@ fn polymarket() -> Command {
     cmd
 }
 
-// ── Help text ───────────────────────────────────────────────────────
-
 #[test]
 fn help_lists_all_top_level_commands() {
     polymarket().arg("--help").assert().success().stdout(
@@ -85,8 +83,6 @@ fn wallet_help_lists_subcommands() {
         );
 }
 
-// ── Arg validation (no network needed) ──────────────────────────────
-
 #[test]
 fn no_args_shows_usage() {
     polymarket()
@@ -124,11 +120,8 @@ fn comments_list_requires_entity_args() {
     polymarket().args(["comments", "list"]).assert().failure();
 }
 
-// ── Error output contract ───────────────────────────────────────────
-//
-// These test the error handling in main.rs: JSON mode puts structured
-// errors on stdout, table mode puts "Error:" on stderr. Uses a
-// guaranteed-to-fail command (fetching a nonexistent market slug).
+// Uses a guaranteed-to-fail command (nonexistent slug) to verify the error
+// output contract: JSON mode → structured error on stdout, table mode → stderr.
 
 #[test]
 fn json_mode_error_is_valid_json_with_error_key() {
@@ -162,8 +155,6 @@ fn table_mode_error_goes_to_stderr() {
         .stderr(predicate::str::contains("Error:"));
 }
 
-// ── Wallet show (works offline) ─────────────────────────────────────
-
 #[test]
 fn wallet_show_always_succeeds() {
     polymarket().args(["wallet", "show"]).assert().success();
@@ -185,8 +176,6 @@ fn wallet_show_json_has_configured_field() {
         "missing 'configured' key: {parsed}"
     );
 }
-
-// ── Help text for remaining commands ─────────────────────────────
 
 #[test]
 fn tags_help_lists_subcommands() {
@@ -288,8 +277,6 @@ fn bridge_help_lists_subcommands() {
         );
 }
 
-// ── Arg validation (additional commands, no network) ─────────────
-
 #[test]
 fn events_get_requires_id() {
     polymarket().args(["events", "get"]).assert().failure();
@@ -334,8 +321,6 @@ fn clob_price_requires_token() {
 fn data_positions_requires_address() {
     polymarket().args(["data", "positions"]).assert().failure();
 }
-
-// ── Approve & CTF commands ───────────────────────────────────────
 
 #[test]
 fn approve_help_lists_subcommands() {
@@ -481,8 +466,6 @@ fn ctf_position_id_requires_collection() {
         .failure();
 }
 
-// ── Output format flag works across commands ─────────────────────
-
 #[test]
 fn json_flag_short_form_works() {
     polymarket()
@@ -499,8 +482,6 @@ fn table_output_is_default() {
         .success()
         .stdout(predicate::str::contains("Address").or(predicate::str::contains("configured")));
 }
-
-// ── Wallet commands (offline) ────────────────────────────────────
 
 #[test]
 fn wallet_address_succeeds_or_fails_gracefully() {

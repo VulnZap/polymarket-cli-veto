@@ -70,8 +70,6 @@ mod tests {
     use super::*;
     use rust_decimal_macros::dec;
 
-    // ── truncate ────────────────────────────────────────────────
-
     #[test]
     fn truncate_shorter_than_max_unchanged() {
         assert_eq!(truncate("hello", 10), "hello");
@@ -107,8 +105,6 @@ mod tests {
         // "café!" is 5 chars but 6 bytes (é is 2 bytes)
         assert_eq!(truncate("café!", 3), "ca\u{2026}");
     }
-
-    // ── format_decimal ──────────────────────────────────────────
 
     #[test]
     fn format_decimal_millions() {

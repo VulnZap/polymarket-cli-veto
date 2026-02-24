@@ -18,8 +18,6 @@ fn format_market(m: &Market) -> String {
     }
 }
 
-// --- Positions ---
-
 pub fn print_positions(positions: &[Position], output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -85,8 +83,6 @@ pub fn print_positions(positions: &[Position], output: &OutputFormat) {
     }
 }
 
-// --- Closed Positions ---
-
 pub fn print_closed_positions(positions: &[ClosedPosition], output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -141,8 +137,6 @@ pub fn print_closed_positions(positions: &[ClosedPosition], output: &OutputForma
     }
 }
 
-// --- Value ---
-
 pub fn print_value(values: &[Value], output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -177,8 +171,6 @@ pub fn print_value(values: &[Value], output: &OutputFormat) {
     }
 }
 
-// --- Traded ---
-
 pub fn print_traded(t: &Traded, output: &OutputFormat) {
     match output {
         OutputFormat::Table => println!("{}: {} markets traded", t.user, t.traded),
@@ -194,8 +186,6 @@ pub fn print_traded(t: &Traded, output: &OutputFormat) {
         }
     }
 }
-
-// --- Trades ---
 
 pub fn print_trades(trades: &[Trade], output: &OutputFormat) {
     match output {
@@ -254,8 +244,6 @@ pub fn print_trades(trades: &[Trade], output: &OutputFormat) {
     }
 }
 
-// --- Activity ---
-
 pub fn print_activity(activity: &[Activity], output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -308,8 +296,6 @@ pub fn print_activity(activity: &[Activity], output: &OutputFormat) {
         }
     }
 }
-
-// --- Holders ---
 
 pub fn print_holders(meta_holders: &[MetaHolder], output: &OutputFormat) {
     match output {
@@ -373,8 +359,6 @@ pub fn print_holders(meta_holders: &[MetaHolder], output: &OutputFormat) {
     }
 }
 
-// --- Open Interest ---
-
 pub fn print_open_interest(oi: &[OpenInterest], output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -408,8 +392,6 @@ pub fn print_open_interest(oi: &[OpenInterest], output: &OutputFormat) {
         }
     }
 }
-
-// --- Live Volume ---
 
 pub fn print_live_volume(volume: &[LiveVolume], output: &OutputFormat) {
     match output {
@@ -455,8 +437,6 @@ pub fn print_live_volume(volume: &[LiveVolume], output: &OutputFormat) {
         }
     }
 }
-
-// --- Trader Leaderboard ---
 
 pub fn print_leaderboard(entries: &[TraderLeaderboardEntry], output: &OutputFormat) {
     match output {
@@ -506,8 +486,6 @@ pub fn print_leaderboard(entries: &[TraderLeaderboardEntry], output: &OutputForm
     }
 }
 
-// --- Builder Leaderboard ---
-
 pub fn print_builder_leaderboard(entries: &[BuilderLeaderboardEntry], output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -555,8 +533,6 @@ pub fn print_builder_leaderboard(entries: &[BuilderLeaderboardEntry], output: &O
         }
     }
 }
-
-// --- Builder Volume ---
 
 pub fn print_builder_volume(entries: &[BuilderVolumeEntry], output: &OutputFormat) {
     match output {

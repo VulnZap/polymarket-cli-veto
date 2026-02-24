@@ -19,7 +19,6 @@ fn print_banner() {
 
     println!();
 
-    // Block-letter POLYMARKET (ANSI Shadow style, kerned)
     println!("  {b}{bold}██████╗  ██████╗ ██╗  ██╗   ██╗███╗   ███╗ █████╗ ██████╗ ██╗  ██╗███████╗████████╗{r}");
     println!("  {b}{bold}██╔══██╗██╔═══██╗██║  ╚██╗ ██╔╝████╗ ████║██╔══██╗██╔══██╗██║ ██╔╝██╔════╝╚══██╔══╝{r}");
     println!("  {b}{bold}██████╔╝██║   ██║██║   ╚████╔╝ ██╔████╔██║███████║██████╔╝█████╔╝ █████╗     ██║{r}");
@@ -29,7 +28,7 @@ fn print_banner() {
 
     println!();
 
-    // Warning box (blue outline, matches logo width of 83)
+    // Box width matches logo (83 chars)
     println!("  {b}╭─────────────────────────────────────────────────────────────────────────────────╮{r}");
     println!("  {b}│{r}               {bold}Preview{r} {dim}— use small amounts only, at your own risk.{r}               {b}│{r}");
     println!("  {b}╰─────────────────────────────────────────────────────────────────────────────────╯{r}");
@@ -65,7 +64,6 @@ pub fn execute() -> Result<()> {
 
     let total = 4;
 
-    // ── Step 1: Wallet ────────────────────────────────────────────
     step_header(1, total, "Wallet");
 
     let address = if config::config_exists() {
@@ -91,7 +89,6 @@ pub fn execute() -> Result<()> {
 
     println!();
 
-    // ── Steps 2-4 ─────────────────────────────────────────────────
     finish_setup(address)
 }
 
@@ -139,7 +136,6 @@ fn setup_wallet() -> Result<Address> {
 fn finish_setup(address: Address) -> Result<()> {
     let total = 4;
 
-    // ── Step 2: Proxy Wallet ──────────────────────────────────────
     step_header(2, total, "Proxy Wallet");
 
     let proxy = derive_proxy_wallet(address, POLYGON);
@@ -157,7 +153,6 @@ fn finish_setup(address: Address) -> Result<()> {
 
     println!();
 
-    // ── Step 3: Fund Wallet ───────────────────────────────────────
     step_header(3, total, "Fund Wallet");
 
     let deposit_addr = proxy.unwrap_or(address);
@@ -167,7 +162,6 @@ fn finish_setup(address: Address) -> Result<()> {
 
     println!();
 
-    // ── Step 4: Approve Contracts ─────────────────────────────────
     step_header(4, total, "Approve Contracts");
 
     println!("  Run `polymarket approve set` to approve contracts for trading.");

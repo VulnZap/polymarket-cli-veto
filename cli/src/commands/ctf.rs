@@ -160,12 +160,10 @@ fn resolve_collateral(collateral: &str) -> Result<Address> {
     super::parse_address(collateral)
 }
 
-/// Default binary partition [1, 2]
 fn default_partition() -> Vec<U256> {
     vec![U256::from(1), U256::from(2)]
 }
 
-/// Default binary index sets [1, 2]
 fn default_index_sets() -> Vec<U256> {
     vec![U256::from(1), U256::from(2)]
 }
@@ -382,8 +380,6 @@ pub async fn execute(
 mod tests {
     use super::*;
 
-    // ── parse_usdc_amount ──────────────────────────────────────────
-
     #[test]
     fn parse_usdc_amount_whole_dollars() {
         let result = parse_usdc_amount(10.0).unwrap();
@@ -411,8 +407,6 @@ mod tests {
     fn parse_usdc_amount_rejects_negative() {
         assert!(parse_usdc_amount(-5.0).is_err());
     }
-
-    // ── parse_usdc_amounts ─────────────────────────────────────────
 
     #[test]
     fn parse_usdc_amounts_single() {
@@ -461,8 +455,6 @@ mod tests {
         assert!(parse_usdc_amounts("abc").is_err());
     }
 
-    // ── parse_u256_csv ─────────────────────────────────────────────
-
     #[test]
     fn parse_u256_csv_binary_partition() {
         let result = parse_u256_csv("1,2").unwrap();
@@ -503,8 +495,6 @@ mod tests {
         assert!(parse_u256_csv("1,abc,3").is_err());
     }
 
-    // ── parse_optional_parent ──────────────────────────────────────
-
     #[test]
     fn parse_optional_parent_none_is_zero() {
         let result = parse_optional_parent(None).unwrap();
@@ -522,8 +512,6 @@ mod tests {
     fn parse_optional_parent_invalid_fails() {
         assert!(parse_optional_parent(Some("garbage")).is_err());
     }
-
-    // ── default helpers ────────────────────────────────────────────
 
     #[test]
     fn default_partition_is_binary() {

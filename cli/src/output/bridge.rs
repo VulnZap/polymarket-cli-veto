@@ -9,8 +9,6 @@ use tabled::{Table, Tabled};
 
 use super::{OutputFormat, detail_field, format_decimal, print_detail_table};
 
-// --- Deposit ---
-
 pub fn print_deposit(response: &DepositResponse, output: &OutputFormat) {
     match output {
         OutputFormat::Table => {
@@ -34,8 +32,6 @@ pub fn print_deposit(response: &DepositResponse, output: &OutputFormat) {
         }
     }
 }
-
-// --- Supported Assets ---
 
 pub fn print_supported_assets(response: &SupportedAssetsResponse, output: &OutputFormat) {
     match output {
@@ -94,8 +90,6 @@ pub fn print_supported_assets(response: &SupportedAssetsResponse, output: &Outpu
         }
     }
 }
-
-// --- Status ---
 
 fn format_status(s: &DepositTransactionStatus) -> &'static str {
     match s {
