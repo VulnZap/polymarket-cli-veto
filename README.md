@@ -15,7 +15,7 @@ brew install polymarket/tap/polymarket
 ### Shell script (Linux/macOS)
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/polymarket/polymarket-cli/main/install.sh | sh
+curl -sSL https://raw.githubusercontent.com/Polymarket/polymarket-cli/main/install.sh | sh
 ```
 
 ### Cargo
@@ -27,7 +27,7 @@ cargo install polymarket-cli
 ### From source
 
 ```bash
-git clone https://github.com/polymarket/polymarket-cli
+git clone https://github.com/Polymarket/polymarket-cli
 cd polymarket-cli
 cargo install --path .
 ```
