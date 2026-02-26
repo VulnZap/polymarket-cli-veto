@@ -19,3 +19,6 @@ rs-clob-client/
 .env
 
 CLAUDE.md
+
+veto-agent/node_modules/
+veto-agent/dist/

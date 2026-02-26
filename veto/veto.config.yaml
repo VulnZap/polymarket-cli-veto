@@ -1,0 +1,32 @@
+version: "1.0"
+mode: strict
+
+validation:
+  mode: local
+
+# Optional cloud mode:
+# validation:
+#   mode: cloud
+# cloud:
+#   baseUrl: https://api.runveto.com
+#   timeout: 30000
+#   retries: 2
+#   retryDelay: 1000
+
+logging:
+  level: info
+
+rules:
+  directory: ./rules
+  recursive: true
+
+budget:
+  max: 100
+  currency: USD
+  window: session
+
+costs:
+  order_market: amount_usd
+  order_create_limit: amount_usd
+  ctf_split: amount_usd
+  ctf_merge: amount_usd

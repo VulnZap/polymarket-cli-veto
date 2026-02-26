@@ -51,6 +51,35 @@ polymarket wallet create
 polymarket approve set
 ```
 
+## Polymarket Veto MCP (Agent-safe sidecar)
+
+This fork ships a guarded MCP runtime for AI agents:
+
+- Directory: `veto-agent/`
+- Package: `@vulnzap/polymarket-veto-mcp`
+- Default posture: read-heavy, simulation-first, policy-gated mutations
+
+Quick start:
+
+```bash
+# Start guarded MCP runtime (stdio transport by default)
+npx @vulnzap/polymarket-veto-mcp serve
+```
+
+Useful commands:
+
+```bash
+npx @vulnzap/polymarket-veto-mcp doctor
+npx @vulnzap/polymarket-veto-mcp print-tools
+npx @vulnzap/polymarket-veto-mcp print-config
+```
+
+Policy files are included under `veto/rules/`:
+
+- `defaults.yaml`
+- `conservative.yaml`
+- `agent.yaml`
+
 ## Configuration
 
 ### Wallet Setup
