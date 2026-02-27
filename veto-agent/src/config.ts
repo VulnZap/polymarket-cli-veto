@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { parse as parseYaml } from 'yaml';
-import type { McpTransport, PolicyProfile, ResolvedConfig, SidecarConfig } from './types.js';
+import { POLICY_PROFILES, type McpTransport, type PolicyProfile, type ResolvedConfig, type SidecarConfig } from './types.js';
 
 const DEFAULT_CONFIG_PATHS = [
   'veto-agent/polymarket-veto.config.yaml',
@@ -63,8 +63,8 @@ function parseTransport(value: unknown, fallback: McpTransport): McpTransport {
 }
 
 function parsePolicyProfile(value: unknown, fallback: PolicyProfile): PolicyProfile {
-  if (value === 'defaults' || value === 'conservative' || value === 'agent' || value === 'user') {
-    return value;
+  if (typeof value === 'string' && POLICY_PROFILES.includes(value as PolicyProfile)) {
+    return value as PolicyProfile;
   }
   return fallback;
 }

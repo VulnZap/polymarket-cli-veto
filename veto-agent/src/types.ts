@@ -1,4 +1,5 @@
-export type PolicyProfile = 'defaults' | 'conservative' | 'agent' | 'user';
+export const POLICY_PROFILES = ['defaults', 'conservative', 'agent', 'user'] as const;
+export type PolicyProfile = (typeof POLICY_PROFILES)[number];
 export type McpTransport = 'stdio' | 'sse';
 
 export interface SidecarConfig {

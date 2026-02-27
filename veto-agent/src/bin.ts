@@ -3,7 +3,7 @@
 import { loadConfig, toJsonSafeConfig } from './config.js';
 import { serveSse, serveStdio } from './mcp.js';
 import { PolymarketVetoRuntime } from './runtime.js';
-import type { McpTransport, PolicyProfile } from './types.js';
+import { POLICY_PROFILES, type McpTransport, type PolicyProfile } from './types.js';
 
 interface ParsedArgs {
   command: string;
@@ -46,8 +46,8 @@ function parseArgs(argv: string[]): ParsedArgs {
 
 function parsePolicyProfile(value: string | undefined): PolicyProfile | undefined {
   if (!value) return undefined;
-  if (value === 'defaults' || value === 'conservative' || value === 'agent') return value;
-  throw new Error("Invalid --policy-profile value. Expected defaults|conservative|agent.");
+  if (POLICY_PROFILES.includes(value as PolicyProfile)) return value as PolicyProfile;
+  throw new Error(`Invalid --policy-profile value. Expected ${POLICY_PROFILES.join('|')}.`);
 }
 
 function parseSimulation(value: string | undefined): boolean | undefined {
@@ -68,7 +68,7 @@ function printHelp(): void {
 polymarket-veto-mcp
 
 Usage:
-  polymarket-veto-mcp serve [--config <path>] [--policy-profile defaults|conservative|agent] [--simulation on|off] [--transport stdio|sse]
+  polymarket-veto-mcp serve [--config <path>] [--policy-profile ${POLICY_PROFILES.join('|')}] [--simulation on|off] [--transport stdio|sse]
   polymarket-veto-mcp doctor [--config <path>]
   polymarket-veto-mcp print-config [--config <path>]
   polymarket-veto-mcp print-tools [--config <path>]
