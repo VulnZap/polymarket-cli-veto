@@ -91,6 +91,61 @@ describe('runtime decisions', () => {
     expect(mapped.message).toContain('Approval required');
   });
 
+  it('waits for approval and executes tool call when approved', async () => {
+    let approvalLookupId: string | null = null;
+
+    const runtime = await PolymarketVetoRuntime.create(makeConfig(), {
+      guard: {
+        async guard(): Promise<RuntimeDecision> {
+          return {
+            decision: 'require_approval',
+            reason: 'amount requires review',
+            approvalId: 'apr_test_123',
+          };
+        },
+      },
+      waitForApproval: async (approvalId) => {
+        approvalLookupId = approvalId;
+        return { status: 'approved', resolvedBy: 'tester' };
+      },
+      execute: async (binary, argv) => okExecution(argv, { markets: [] }),
+    });
+
+    const result = await runtime.callTool('markets_list', { limit: 5, active: true });
+    const payload = JSON.parse(result.content[0]!.text) as Record<string, unknown>;
+
+    expect(approvalLookupId).toBe('apr_test_123');
+    expect(payload.output).toEqual({ markets: [] });
+  });
+
+  it('maps denied approvals to policy error code', async () => {
+    const runtime = await PolymarketVetoRuntime.create(makeConfig(), {
+      guard: {
+        async guard(): Promise<RuntimeDecision> {
+          return {
+            decision: 'require_approval',
+            reason: 'amount requires review',
+            approvalId: 'apr_test_456',
+          };
+        },
+      },
+      waitForApproval: async () => ({ status: 'denied', resolvedBy: 'reviewer' }),
+      execute: async (binary, argv) => okExecution(argv, { ok: true }),
+    });
+
+    let error: unknown;
+    try {
+      await runtime.callTool('markets_list', { limit: 5, active: true });
+    } catch (err) {
+      error = err;
+    }
+
+    const mapped = runtime.toRpcError(error);
+    expect(mapped.code).toBe(-32001);
+    expect(mapped.message).toContain('Denied by policy');
+    expect(mapped.message).toContain('Approval denied');
+  });
+
   it('simulates mutating commands and computes notional/estimates', async () => {
     const calls: string[][] = [];
 

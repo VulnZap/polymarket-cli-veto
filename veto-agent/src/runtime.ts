@@ -1,6 +1,7 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Veto } from 'veto-sdk';
+import { parse as parseYaml } from 'yaml';
 import { resolvePolymarketBinary, type BinaryResolution } from './binary.js';
 import { executePolymarket } from './executor.js';
 import { getToolSpec, listTools, profileAgentId, type ToolSpec } from './tools.js';
@@ -19,6 +20,12 @@ interface GuardClient {
 interface RuntimeDependencies {
   execute?: (binaryPath: string, argv: string[], opts: { timeoutMs: number; maxOutputBytes: number }) => Promise<ExecutionResult>;
   guard?: GuardClient;
+  waitForApproval?: (approvalId: string) => Promise<ApprovalResolution>;
+}
+
+interface ApprovalResolution {
+  status: 'approved' | 'denied' | 'expired';
+  resolvedBy?: string;
 }
 
 interface LiveState {
@@ -63,6 +70,7 @@ export class PolymarketVetoRuntime {
   private readonly agentId: string;
   private readonly execute: NonNullable<RuntimeDependencies['execute']>;
   private readonly guard: GuardClient;
+  private readonly waitForApproval: NonNullable<RuntimeDependencies['waitForApproval']>;
   private readonly binary: ResolvedBinaryState;
 
   private constructor(
@@ -73,6 +81,7 @@ export class PolymarketVetoRuntime {
     this.agentId = profileAgentId(this.resolved.config.veto.policyProfile);
     this.execute = deps.execute ?? executePolymarket;
     this.guard = deps.guard as GuardClient;
+    this.waitForApproval = deps.waitForApproval ?? ((approvalId) => this.waitForApprovalFromCloud(approvalId));
 
     if (deps.execute) {
       this.binary = {
@@ -261,14 +270,49 @@ export class PolymarketVetoRuntime {
     }
 
     if (decision.decision === 'require_approval') {
-      throw new RuntimeError({
-        code: -32002,
-        message: `Approval required: ${decision.reason ?? 'awaiting approval'}`,
-        data: {
-          ruleId: decision.ruleId,
-          approvalId: decision.approvalId,
-        },
-      });
+      const approvalId = typeof decision.approvalId === 'string' && decision.approvalId.trim().length > 0
+        ? decision.approvalId
+        : undefined;
+
+      if (!approvalId) {
+        throw new RuntimeError({
+          code: -32002,
+          message: `Approval required: ${decision.reason ?? 'awaiting approval'}`,
+          data: {
+            ruleId: decision.ruleId,
+          },
+        });
+      }
+
+      let approval: ApprovalResolution;
+      try {
+        approval = await this.waitForApproval(approvalId);
+      } catch (error) {
+        if (error instanceof RuntimeError) {
+          throw error;
+        }
+
+        throw new RuntimeError({
+          code: -32003,
+          message: `Approval polling failed: ${error instanceof Error ? error.message : String(error)}`,
+          data: {
+            ruleId: decision.ruleId,
+            approvalId,
+          },
+        });
+      }
+
+      if (approval.status !== 'approved') {
+        throw new RuntimeError({
+          code: -32001,
+          message: `Denied by policy: Approval ${approval.status}: ${decision.reason ?? 'approval not granted'}`,
+          data: {
+            ruleId: decision.ruleId,
+            approvalId,
+            resolvedBy: approval.resolvedBy,
+          },
+        });
+      }
     }
 
     const binaryPath = this.requireBinaryPath();
@@ -337,6 +381,119 @@ export class PolymarketVetoRuntime {
     }
 
     return { simulation: false };
+  }
+
+  private readApprovalPollingConfig(): {
+    apiKey: string;
+    baseUrl: string;
+    pollIntervalMs: number;
+    timeoutMs: number;
+    apiKeyEnv: string;
+  } {
+    const apiKeyEnv = this.resolved.config.veto.cloud.apiKeyEnv;
+    const apiKeyRaw = process.env[apiKeyEnv];
+    const apiKey = typeof apiKeyRaw === 'string' ? apiKeyRaw.trim() : '';
+
+    if (!apiKey) {
+      throw new RuntimeError({
+        code: -32002,
+        message: `Approval required but ${apiKeyEnv} is not set for cloud polling`,
+      });
+    }
+
+    let baseUrl = 'https://api.runveto.com';
+    let pollIntervalMs = 2_000;
+    let timeoutMs = 300_000;
+
+    const vetoConfigPath = resolve(this.resolved.baseDir, this.resolved.config.veto.configDir, 'veto.config.yaml');
+
+    if (existsSync(vetoConfigPath)) {
+      try {
+        const parsed = parseYaml(readFileSync(vetoConfigPath, 'utf-8')) as unknown;
+        const root = toRecord(parsed);
+        const cloud = toRecord(root.cloud);
+        const approval = toRecord(root.approval);
+
+        const configuredBaseUrl = optionalString(cloud.baseUrl);
+        if (configuredBaseUrl) {
+          baseUrl = configuredBaseUrl;
+        }
+
+        const configuredPollInterval = optionalPositiveInt(approval.pollInterval);
+        if (configuredPollInterval) {
+          pollIntervalMs = configuredPollInterval;
+        }
+
+        const configuredTimeout = optionalPositiveInt(approval.timeout);
+        if (configuredTimeout) {
+          timeoutMs = configuredTimeout;
+        }
+      } catch {
+        // fall through to defaults
+      }
+    }
+
+    return {
+      apiKey,
+      baseUrl: baseUrl.replace(/\/$/, ''),
+      pollIntervalMs,
+      timeoutMs,
+      apiKeyEnv,
+    };
+  }
+
+  private async waitForApprovalFromCloud(approvalId: string): Promise<ApprovalResolution> {
+    const config = this.readApprovalPollingConfig();
+    const deadline = Date.now() + config.timeoutMs;
+    const url = `${config.baseUrl}/v1/approvals/${encodeURIComponent(approvalId)}`;
+    let lastError: string | undefined;
+
+    while (true) {
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'X-Veto-API-Key': config.apiKey,
+          },
+        });
+
+        if (response.ok) {
+          const body = toRecord(await response.json());
+          const status = optionalString(body.status);
+
+          if (status === 'approved' || status === 'denied' || status === 'expired') {
+            return {
+              status,
+              resolvedBy: optionalString(body.resolvedBy),
+            };
+          }
+        } else {
+          const responseText = await response.text().catch(() => '');
+          lastError = `status ${response.status}${responseText ? `: ${responseText}` : ''}`;
+        }
+      } catch (error) {
+        lastError = error instanceof Error ? error.message : String(error);
+      }
+
+      const remainingMs = deadline - Date.now();
+      if (remainingMs <= 0) {
+        if (lastError) {
+          throw new RuntimeError({
+            code: -32003,
+            message: `Approval polling failed: ${lastError}`,
+            data: { approvalId },
+          });
+        }
+
+        throw new RuntimeError({
+          code: -32002,
+          message: `Approval required but timed out after ${Math.floor(config.timeoutMs / 1000)}s`,
+          data: { approvalId },
+        });
+      }
+
+      await sleep(Math.min(config.pollIntervalMs, remainingMs));
+    }
   }
 
   private async simulate(
@@ -421,4 +578,30 @@ export class PolymarketVetoRuntime {
       data: { error },
     };
   }
+}
+
+function toRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {};
+  }
+  return value as Record<string, unknown>;
+}
+
+function optionalString(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function optionalPositiveInt(value: unknown): number | undefined {
+  if (value === undefined || value === null) return undefined;
+  const parsed = typeof value === 'number' ? value : Number.parseInt(String(value), 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return undefined;
+  return Math.floor(parsed);
+}
+
+async function sleep(ms: number): Promise<void> {
+  await new Promise((resolveDelay) => {
+    setTimeout(resolveDelay, ms);
+  });
 }
