@@ -24,6 +24,12 @@ By default this starts stdio MCP transport with:
 - simulation mode: `on`
 - live trading: `disabled` unless explicitly enabled
 
+For stricter human-in-the-loop guardrails, run:
+
+```bash
+npx -y @plawio/polymarket-veto-mcp serve --policy-profile user
+```
+
 ## Required dependency: Polymarket binary
 
 This MCP package wraps the Rust `polymarket` CLI. One of these must exist:
@@ -141,6 +147,13 @@ Key settings:
 - `mcp.transport`
 - `veto.configDir`
 - `veto.policyProfile`
+
+Supported policy profiles:
+
+- `defaults` (launch-safe baseline)
+- `conservative` (stricter limits)
+- `agent` (autonomous-with-guardrails)
+- `user` (human trader profile: stronger approval + hard block rules)
 
 `polymarket.binaryPath` supports:
 

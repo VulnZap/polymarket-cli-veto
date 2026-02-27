@@ -63,7 +63,7 @@ function parseTransport(value: unknown, fallback: McpTransport): McpTransport {
 }
 
 function parsePolicyProfile(value: unknown, fallback: PolicyProfile): PolicyProfile {
-  if (value === 'defaults' || value === 'conservative' || value === 'agent') {
+  if (value === 'defaults' || value === 'conservative' || value === 'agent' || value === 'user') {
     return value;
   }
   return fallback;
