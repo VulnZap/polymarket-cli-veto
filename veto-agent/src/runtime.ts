@@ -468,11 +468,10 @@ export class PolymarketVetoRuntime {
             };
           }
         } else if (response.status >= 400 && response.status < 500) {
-          // 4xx errors are not retryable — fail immediately
           const responseText = await response.text().catch(() => '');
           throw new RuntimeError({
             code: -32003,
-            message: `Approval polling failed: status ${response.status}: ${responseText}`,
+            message: `Approval polling failed: status ${response.status}${responseText ? `: ${responseText}` : ''}`,
             data: { approvalId },
           });
         } else {
