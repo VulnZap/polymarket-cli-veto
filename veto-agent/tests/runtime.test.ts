@@ -1,4 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { PolymarketVetoRuntime } from '../src/runtime.js';
 import type { ExecutionResult, ResolvedConfig, RuntimeDecision } from '../src/types.js';
 
@@ -177,5 +180,83 @@ describe('runtime decisions', () => {
     // midpoint lookup should happen, live command should not execute.
     expect(calls).toHaveLength(1);
     expect(calls[0]).toEqual(['clob', 'midpoint', '1']);
+  });
+
+  it('fails fast on non-retryable approval polling 4xx responses', async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'polymarket-veto-'));
+    const vetoDir = join(tempDir, 'veto');
+    mkdirSync(vetoDir, { recursive: true });
+    writeFileSync(
+      join(vetoDir, 'veto.config.yaml'),
+      [
+        'validation:',
+        '  mode: cloud',
+        'cloud:',
+        '  baseUrl: https://api.runveto.com',
+        'approval:',
+        '  pollInterval: 10',
+        '  timeout: 1000',
+        '',
+      ].join('\n'),
+      'utf-8',
+    );
+
+    const prevApiKey = process.env.VETO_API_KEY;
+    process.env.VETO_API_KEY = 'veto_test_key';
+
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ error: { code: 'access_denied' } }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const cfg = makeConfig();
+    const runtime = await PolymarketVetoRuntime.create(
+      {
+        ...cfg,
+        baseDir: tempDir,
+        config: {
+          ...cfg.config,
+          veto: {
+            ...cfg.config.veto,
+            configDir: 'veto',
+          },
+        },
+      },
+      {
+        guard: {
+          async guard(): Promise<RuntimeDecision> {
+            return {
+              decision: 'require_approval',
+              reason: 'needs review',
+              approvalId: 'apr_non_retryable_403',
+            };
+          },
+        },
+        execute: async (binary, argv) => okExecution(argv, { ok: true }),
+      },
+    );
+
+    let error: unknown;
+    try {
+      await runtime.callTool('markets_list', { limit: 1, active: true });
+    } catch (err) {
+      error = err;
+    } finally {
+      if (prevApiKey === undefined) {
+        delete process.env.VETO_API_KEY;
+      } else {
+        process.env.VETO_API_KEY = prevApiKey;
+      }
+      vi.unstubAllGlobals();
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+
+    const mapped = runtime.toRpcError(error);
+    expect(mapped.code).toBe(-32003);
+    expect(mapped.message).toContain('Approval polling failed: status 403');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
