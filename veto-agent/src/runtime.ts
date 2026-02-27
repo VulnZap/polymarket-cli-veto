@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Veto } from 'veto-sdk';
+import { resolvePolymarketBinary, type BinaryResolution } from './binary.js';
 import { executePolymarket } from './executor.js';
 import { getToolSpec, listTools, profileAgentId, type ToolSpec } from './tools.js';
 import type {
@@ -23,6 +24,10 @@ interface RuntimeDependencies {
 interface LiveState {
   simulation: boolean;
   reason?: string;
+}
+
+interface ResolvedBinaryState extends BinaryResolution {
+  available: boolean;
 }
 
 class RuntimeError extends Error {
@@ -58,6 +63,7 @@ export class PolymarketVetoRuntime {
   private readonly agentId: string;
   private readonly execute: NonNullable<RuntimeDependencies['execute']>;
   private readonly guard: GuardClient;
+  private readonly binary: ResolvedBinaryState;
 
   private constructor(
     private readonly resolved: ResolvedConfig,
@@ -67,6 +73,30 @@ export class PolymarketVetoRuntime {
     this.agentId = profileAgentId(this.resolved.config.veto.policyProfile);
     this.execute = deps.execute ?? executePolymarket;
     this.guard = deps.guard as GuardClient;
+
+    if (deps.execute) {
+      this.binary = {
+        requestedPath: this.resolved.config.polymarket.binaryPath,
+        resolvedPath: this.resolved.config.polymarket.binaryPath,
+        source: 'injected',
+        checkedPaths: [],
+        available: true,
+      };
+    } else {
+      const discovered = resolvePolymarketBinary({
+        requestedPath: this.resolved.config.polymarket.binaryPath,
+        baseDir: this.resolved.baseDir,
+      });
+
+      this.binary = {
+        ...discovered,
+        available: Boolean(discovered.resolvedPath),
+      };
+
+      if (discovered.resolvedPath) {
+        this.resolved.config.polymarket.binaryPath = discovered.resolvedPath;
+      }
+    }
   }
 
   static async create(resolved: ResolvedConfig, deps: RuntimeDependencies = {}): Promise<PolymarketVetoRuntime> {
@@ -98,6 +128,10 @@ export class PolymarketVetoRuntime {
       port: this.resolved.config.mcp.port,
       path: this.resolved.config.mcp.path,
       binaryPath: this.resolved.config.polymarket.binaryPath,
+      binaryRequestedPath: this.binary.requestedPath,
+      binaryResolvedPath: this.binary.resolvedPath,
+      binarySource: this.binary.source,
+      binaryAvailable: this.binary.available,
     };
   }
 
@@ -109,27 +143,70 @@ export class PolymarketVetoRuntime {
     }));
   }
 
-  async doctor(): Promise<Record<string, unknown>> {
-    const binaryResult = await this.execute(
-      this.resolved.config.polymarket.binaryPath,
-      ['--version'],
-      {
-        timeoutMs: Math.min(this.resolved.config.execution.maxCommandTimeoutMs, 4000),
-        maxOutputBytes: this.resolved.config.execution.maxOutputBytes,
+  private binaryFixes(): string[] {
+    return [
+      "Install Polymarket CLI globally (for macOS/Linux: 'brew install polymarket').",
+      "Or build this repo binary: 'cargo build --release' and use './target/release/polymarket'.",
+      "Or set POLYMARKET_BINARY_PATH to a valid executable.",
+      "Or set polymarket.binaryPath in veto-agent/polymarket-veto.config.yaml.",
+    ];
+  }
+
+  private binaryMissingMessage(): string {
+    return [
+      'Polymarket CLI binary not found.',
+      `requested='${this.binary.requestedPath}'`,
+      `checked=${this.binary.checkedPaths.length}`,
+      "Run 'polymarket-veto-mcp doctor' for detailed diagnostics.",
+    ].join(' ');
+  }
+
+  private requireBinaryPath(): string {
+    if (this.binary.resolvedPath) {
+      return this.binary.resolvedPath;
+    }
+
+    throw new RuntimeError({
+      code: -32003,
+      message: this.binaryMissingMessage(),
+      data: {
+        requestedPath: this.binary.requestedPath,
+        checkedPaths: this.binary.checkedPaths,
+        fixes: this.binaryFixes(),
       },
-    );
+    });
+  }
+
+  async doctor(): Promise<Record<string, unknown>> {
+    let binaryResult: ExecutionResult | null = null;
+
+    if (this.binary.resolvedPath) {
+      binaryResult = await this.execute(
+        this.binary.resolvedPath,
+        ['--version'],
+        {
+          timeoutMs: Math.min(this.resolved.config.execution.maxCommandTimeoutMs, 4000),
+          maxOutputBytes: this.resolved.config.execution.maxOutputBytes,
+        },
+      );
+    }
 
     const vetoConfigPath = resolve(this.resolved.baseDir, this.resolved.config.veto.configDir, 'veto.config.yaml');
     const rulesDir = resolve(this.resolved.baseDir, this.resolved.config.veto.configDir, 'rules');
+    const binaryOk = binaryResult?.ok === true;
 
     return {
-      ok: binaryResult.ok && existsSync(vetoConfigPath) && existsSync(rulesDir),
+      ok: binaryOk && existsSync(vetoConfigPath) && existsSync(rulesDir),
       binary: {
-        path: this.resolved.config.polymarket.binaryPath,
-        ok: binaryResult.ok,
-        exitCode: binaryResult.exitCode,
-        stdout: binaryResult.stdout.trim(),
-        stderr: binaryResult.stderr.trim(),
+        requestedPath: this.binary.requestedPath,
+        resolvedPath: this.binary.resolvedPath,
+        source: this.binary.source,
+        checkedPaths: this.binary.checkedPaths,
+        ok: binaryOk,
+        exitCode: binaryResult?.exitCode ?? -1,
+        stdout: binaryResult?.stdout.trim() ?? '',
+        stderr: binaryResult?.stderr.trim() ?? (this.binary.resolvedPath ? '' : this.binaryMissingMessage()),
+        fixes: this.binaryFixes(),
       },
       veto: {
         configDir: resolve(this.resolved.baseDir, this.resolved.config.veto.configDir),
@@ -194,10 +271,11 @@ export class PolymarketVetoRuntime {
       });
     }
 
+    const binaryPath = this.requireBinaryPath();
     const liveState = this.resolveLiveState(spec, simulationOverride);
 
     if (spec.mutating && liveState.simulation) {
-      const simulation = await this.simulate(spec, built, liveState.reason);
+      const simulation = await this.simulate(spec, built, binaryPath, liveState.reason);
       return {
         content: [{
           type: 'text',
@@ -207,7 +285,7 @@ export class PolymarketVetoRuntime {
     }
 
     const execution = await this.execute(
-      this.resolved.config.polymarket.binaryPath,
+      binaryPath,
       built.argv,
       {
         timeoutMs: this.resolved.config.execution.maxCommandTimeoutMs,
@@ -261,12 +339,17 @@ export class PolymarketVetoRuntime {
     return { simulation: false };
   }
 
-  private async simulate(spec: ToolSpec, built: { argv: string[]; guardArgs: Record<string, unknown> }, reason?: string): Promise<Record<string, unknown>> {
+  private async simulate(
+    spec: ToolSpec,
+    built: { argv: string[]; guardArgs: Record<string, unknown> },
+    binaryPath: string,
+    reason?: string,
+  ): Promise<Record<string, unknown>> {
     const out: Record<string, unknown> = {
       simulation: true,
       reason,
       tool: spec.name,
-      command: `${this.resolved.config.polymarket.binaryPath} -o json ${built.argv.join(' ')}`,
+      command: `${binaryPath} -o json ${built.argv.join(' ')}`,
       guardArgs: built.guardArgs,
       liveTrading: false,
     };
@@ -275,7 +358,7 @@ export class PolymarketVetoRuntime {
       const token = typeof built.guardArgs.token === 'string' ? built.guardArgs.token : null;
       if (token) {
         const midpointResponse = await this.execute(
-          this.resolved.config.polymarket.binaryPath,
+          binaryPath,
           ['clob', 'midpoint', token],
           {
             timeoutMs: Math.min(this.resolved.config.execution.maxCommandTimeoutMs, 5000),

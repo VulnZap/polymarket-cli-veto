@@ -63,19 +63,22 @@ This fork ships a guarded MCP runtime for AI agents:
 ### 60-second tester quickstart
 
 ```bash
-# 1) Verify polymarket binary
-polymarket --version
+# 1) Ensure polymarket binary exists
+#    Either install globally:
+brew install polymarket
+#    Or build locally in this repo:
+cargo build --release
 
 # 2) Start guarded MCP runtime (stdio transport by default)
-npx @plawio/polymarket-veto-mcp serve
+npx -y @plawio/polymarket-veto-mcp serve
 ```
 
 ### High-signal test commands
 
 ```bash
-npx @plawio/polymarket-veto-mcp doctor
-npx @plawio/polymarket-veto-mcp print-tools
-npx @plawio/polymarket-veto-mcp print-config
+npx -y @plawio/polymarket-veto-mcp doctor
+npx -y @plawio/polymarket-veto-mcp print-tools
+npx -y @plawio/polymarket-veto-mcp print-config
 ```
 
 ### Policy profiles (included)
@@ -87,7 +90,38 @@ npx @plawio/polymarket-veto-mcp print-config
 Switch profile at runtime:
 
 ```bash
-npx @plawio/polymarket-veto-mcp serve --policy-profile defaults
+npx -y @plawio/polymarket-veto-mcp serve --policy-profile defaults
+```
+
+If your MCP host runs from inside `veto-agent/` and `npx` fails to resolve the bin, use:
+
+```bash
+pnpm dlx @plawio/polymarket-veto-mcp serve --policy-profile defaults
+```
+
+or configure MCP with:
+
+```json
+{
+  "mcpServers": {
+    "polymarket-veto": {
+      "command": "npm",
+      "args": [
+        "exec",
+        "--yes",
+        "--prefix",
+        "/tmp",
+        "--package",
+        "@plawio/polymarket-veto-mcp",
+        "--",
+        "polymarket-veto-mcp",
+        "serve",
+        "--policy-profile",
+        "defaults"
+      ]
+    }
+  }
+}
 ```
 
 ### Cloud mode (optional)

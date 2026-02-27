@@ -15,7 +15,7 @@ Tagline: **Polymarket CLI, but safe for agents.**
 ## Install and run
 
 ```bash
-npx @plawio/polymarket-veto-mcp serve
+npx -y @plawio/polymarket-veto-mcp serve
 ```
 
 By default this starts stdio MCP transport with:
@@ -24,17 +24,79 @@ By default this starts stdio MCP transport with:
 - simulation mode: `on`
 - live trading: `disabled` unless explicitly enabled
 
+## Required dependency: Polymarket binary
+
+This MCP package wraps the Rust `polymarket` CLI. One of these must exist:
+
+```bash
+# Option A: install globally
+brew install polymarket
+
+# Option B: build from this repo
+cargo build --release
+```
+
+Then verify:
+
+```bash
+polymarket --version
+```
+
+If you built locally and did not install globally, set:
+
+```yaml
+polymarket:
+  binaryPath: ../target/release/polymarket
+```
+
 ## Commands
 
 ```bash
-npx @plawio/polymarket-veto-mcp serve \
+npx -y @plawio/polymarket-veto-mcp serve \
   --policy-profile defaults \
   --simulation on \
   --transport stdio
 
-npx @plawio/polymarket-veto-mcp doctor
-npx @plawio/polymarket-veto-mcp print-tools
-npx @plawio/polymarket-veto-mcp print-config
+npx -y @plawio/polymarket-veto-mcp doctor
+npx -y @plawio/polymarket-veto-mcp print-tools
+npx -y @plawio/polymarket-veto-mcp print-config
+```
+
+If `npx` is being run from this package source directory and fails to resolve the bin, use:
+
+```bash
+pnpm dlx @plawio/polymarket-veto-mcp serve
+```
+
+or
+
+```bash
+bunx @plawio/polymarket-veto-mcp serve
+```
+
+## MCP client config (works from any cwd)
+
+```json
+{
+  "mcpServers": {
+    "polymarket-veto": {
+      "command": "npm",
+      "args": [
+        "exec",
+        "--yes",
+        "--prefix",
+        "/tmp",
+        "--package",
+        "@plawio/polymarket-veto-mcp",
+        "--",
+        "polymarket-veto-mcp",
+        "serve",
+        "--policy-profile",
+        "defaults"
+      ]
+    }
+  }
+}
 ```
 
 ## Tool set
@@ -79,6 +141,12 @@ Key settings:
 - `mcp.transport`
 - `veto.configDir`
 - `veto.policyProfile`
+
+`polymarket.binaryPath` supports:
+
+- `auto` (default): PATH lookup + local `target/release` / `target/debug` auto-discovery
+- explicit command name (for example `polymarket`)
+- explicit path (for example `../target/release/polymarket`)
 
 Veto root config and rules are expected under `veto/`.
 

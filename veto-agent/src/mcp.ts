@@ -1,10 +1,21 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { readFileSync } from 'node:fs';
 import type { JsonRpcRequest, JsonRpcResponse, McpToolResult } from './types.js';
 import { PolymarketVetoRuntime } from './runtime.js';
 
 export interface ServeOptions {
   simulationOverride?: boolean;
 }
+
+const SERVER_VERSION = (() => {
+  try {
+    const pkgRaw = readFileSync(new URL('../package.json', import.meta.url), 'utf-8');
+    const pkg = JSON.parse(pkgRaw) as { version?: string };
+    return pkg.version ?? '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+})();
 
 function makeResponse(id: JsonRpcRequest['id'], result?: unknown, error?: JsonRpcResponse['error']): JsonRpcResponse {
   return {
@@ -86,7 +97,7 @@ async function handleRpc(runtime: PolymarketVetoRuntime, req: JsonRpcRequest, op
       protocolVersion: '2025-03-26',
       serverInfo: {
         name: 'polymarket-veto-mcp',
-        version: '0.1.0',
+        version: SERVER_VERSION,
       },
       capabilities: {
         tools: {

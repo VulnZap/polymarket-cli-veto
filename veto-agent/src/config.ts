@@ -10,7 +10,7 @@ const DEFAULT_CONFIG_PATHS = [
 
 const DEFAULTS: SidecarConfig = {
   polymarket: {
-    binaryPath: 'polymarket',
+    binaryPath: 'auto',
   },
   execution: {
     simulationDefault: true,
