@@ -51,6 +51,96 @@ polymarket wallet create
 polymarket approve set
 ```
 
+## Polymarket Veto MCP (Agent-safe sidecar)
+
+This fork ships a guarded MCP runtime for AI agents:
+
+- Directory: `veto-agent/`
+- Package: `@plawio/polymarket-veto-mcp`
+- Default posture: read-heavy, simulation-first, policy-gated mutations
+- Tagline: **Polymarket CLI, but safe for agents.**
+
+### 60-second tester quickstart
+
+```bash
+# 1) Verify polymarket binary
+polymarket --version
+
+# 2) Start guarded MCP runtime (stdio transport by default)
+npx @plawio/polymarket-veto-mcp serve
+```
+
+### High-signal test commands
+
+```bash
+npx @plawio/polymarket-veto-mcp doctor
+npx @plawio/polymarket-veto-mcp print-tools
+npx @plawio/polymarket-veto-mcp print-config
+```
+
+### Policy profiles (included)
+
+- `defaults.yaml`
+- `conservative.yaml`
+- `agent.yaml`
+
+Switch profile at runtime:
+
+```bash
+npx @plawio/polymarket-veto-mcp serve --policy-profile defaults
+```
+
+### Cloud mode (optional)
+
+Local deterministic mode works out of the box. To use cloud-backed validation:
+
+```bash
+export VETO_API_KEY=veto_xxx
+```
+
+Then set `validation.mode: cloud` in `veto/veto.config.yaml`.
+
+### Simulation vs live trading safety
+
+Mutating tools are simulation-first by default.
+
+Live execution requires all three:
+
+1. start with `--simulation off`
+2. set `execution.allowLiveTrades: true` in `veto-agent/polymarket-veto.config.yaml`
+3. export `ALLOW_LIVE_TRADES=true`
+
+This prevents accidental wallet-impacting automation.
+
+### Tool coverage in v1
+
+Read-only:
+
+- `markets_list`
+- `markets_search`
+- `markets_get`
+- `clob_book`
+- `clob_midpoint`
+- `clob_price`
+- `portfolio_positions`
+
+Mutating (policy-guarded):
+
+- `order_create_limit`
+- `order_market`
+- `order_cancel`
+- `order_cancel_all`
+- `approve_set`
+- `ctf_split`
+- `ctf_merge`
+- `ctf_redeem`
+
+Never exposed:
+
+- `wallet_import`
+- `wallet_reset`
+- `clob_delete_api_key`
+
 ## Configuration
 
 ### Wallet Setup

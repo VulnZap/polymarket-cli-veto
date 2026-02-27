@@ -1,0 +1,64 @@
+version: "1.0"
+name: polymarket-defaults
+
+description: Launch-safe baseline profile for agent trading.
+
+rules:
+  - id: defaults-order-over-25
+    name: Require approval above $25 for order placement
+    enabled: true
+    severity: high
+    action: require_approval
+    agents:
+      - profile/defaults
+    tools:
+      - order_create_limit
+      - order_market
+    conditions:
+      - field: arguments.amount_usd
+        operator: greater_than
+        value: 25
+
+  - id: defaults-cancel-all
+    name: Require approval for cancel-all
+    enabled: true
+    severity: high
+    action: require_approval
+    agents:
+      - profile/defaults
+    tools:
+      - order_cancel_all
+
+  - id: defaults-approve-set
+    name: Require approval for on-chain approval setup
+    enabled: true
+    severity: critical
+    action: require_approval
+    agents:
+      - profile/defaults
+    tools:
+      - approve_set
+
+  - id: defaults-block-ctf
+    name: Block raw CTF operations by default
+    enabled: true
+    severity: critical
+    action: block
+    agents:
+      - profile/defaults
+    tools:
+      - ctf_split
+      - ctf_merge
+      - ctf_redeem
+
+  - id: defaults-block-wallet-ops
+    name: Block wallet key mutation operations
+    enabled: true
+    severity: critical
+    action: block
+    agents:
+      - profile/defaults
+    tools:
+      - wallet_import
+      - wallet_reset
+      - clob_delete_api_key

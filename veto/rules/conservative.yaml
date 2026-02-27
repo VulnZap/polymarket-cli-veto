@@ -1,0 +1,60 @@
+version: "1.0"
+name: polymarket-conservative
+
+description: Strictest profile for assisted or experimental automation.
+
+rules:
+  - id: conservative-approval-all-mutations
+    name: Require approval for all mutating operations except cancel single order
+    enabled: true
+    severity: critical
+    action: require_approval
+    agents:
+      - profile/conservative
+    tools:
+      - order_create_limit
+      - order_market
+      - order_cancel_all
+      - approve_set
+      - ctf_split
+      - ctf_merge
+      - ctf_redeem
+
+  - id: conservative-over-10
+    name: Highlight higher sensitivity above $10
+    enabled: true
+    severity: critical
+    action: require_approval
+    agents:
+      - profile/conservative
+    tools:
+      - order_create_limit
+      - order_market
+    conditions:
+      - field: arguments.amount_usd
+        operator: greater_than
+        value: 10
+
+  - id: conservative-block-ctf
+    name: Block CTF split/merge/redeem
+    enabled: true
+    severity: critical
+    action: block
+    agents:
+      - profile/conservative
+    tools:
+      - ctf_split
+      - ctf_merge
+      - ctf_redeem
+
+  - id: conservative-block-wallet-ops
+    name: Block wallet and key mutation operations
+    enabled: true
+    severity: critical
+    action: block
+    agents:
+      - profile/conservative
+    tools:
+      - wallet_import
+      - wallet_reset
+      - clob_delete_api_key
