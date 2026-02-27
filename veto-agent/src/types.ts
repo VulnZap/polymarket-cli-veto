@@ -1,4 +1,4 @@
-export type PolicyProfile = 'defaults' | 'conservative' | 'agent';
+export type PolicyProfile = 'defaults' | 'conservative' | 'agent' | 'user';
 export type McpTransport = 'stdio' | 'sse';
 
 export interface SidecarConfig {

@@ -1,0 +1,214 @@
+version: "1.0"
+name: polymarket-user
+
+description: >
+  Sensible guardrails for users delegating Polymarket trading to an AI agent.
+  Combines hard size limits, sell-side approval, price discipline, and
+  off-hours protection. Every rule maps to a concrete failure mode.
+
+rules:
+
+  # ── SIZE LIMITS ──────────────────────────────────────────────────────────
+
+  - id: user-block-oversized-order
+    name: Block orders over $500
+    description: >
+      Hard cap on any single order. An AI agent must never exceed $500
+      per trade without a deliberate config change.
+    enabled: true
+    severity: critical
+    action: block
+    agents:
+      - profile/user
+    tools:
+      - order_create_limit
+      - order_market
+    conditions:
+      - field: arguments.amount_usd
+        operator: greater_than
+        value: 500
+
+  - id: user-approve-large-order
+    name: Require approval for orders over $100
+    description: >
+      Human review required for any single order above $100.
+      Catches runaway sizing before capital is committed.
+    enabled: true
+    severity: high
+    action: require_approval
+    agents:
+      - profile/user
+    tools:
+      - order_create_limit
+      - order_market
+    conditions:
+      - field: arguments.amount_usd
+        operator: greater_than
+        value: 100
+
+  # ── ORDER TYPE DISCIPLINE ─────────────────────────────────────────────────
+
+  - id: user-block-fok-large
+    name: Block FOK orders above $50
+    description: >
+      Fill-or-Kill orders accept any available price or cancel outright.
+      On illiquid books this means full fills at severely adverse prices.
+      Cap FOK at $50 to limit the blast radius of a bad fill.
+    enabled: true
+    severity: high
+    action: block
+    agents:
+      - profile/user
+    tools:
+      - order_create_limit
+    conditions:
+      - field: arguments.orderType
+        operator: equals
+        value: FOK
+      - field: arguments.amount_usd
+        operator: greater_than
+        value: 50
+
+  # ── SELL DISCIPLINE ───────────────────────────────────────────────────────
+
+  - id: user-approve-all-sells
+    name: Require approval for all sell orders
+    description: >
+      An AI agent should never liquidate a position autonomously. Every
+      sell — regardless of size — requires an explicit human confirmation.
+      This is the single most important guardrail for protecting existing
+      positions from accidental or premature exit.
+    enabled: true
+    severity: high
+    action: require_approval
+    agents:
+      - profile/user
+    tools:
+      - order_create_limit
+      - order_market
+    conditions:
+      - field: arguments.side
+        operator: equals
+        value: sell
+
+  # ── PRICE DISCIPLINE ──────────────────────────────────────────────────────
+
+  - id: user-block-extreme-buy-price
+    name: Block limit buys at price > $0.97
+    description: >
+      Buying at 97c or above means paying a large premium on a market that
+      is almost certainly already settled or near resolution. These trades
+      carry severe tail risk (3c downside, near-zero upside) and are almost
+      always a data error on the agent's part.
+    enabled: true
+    severity: high
+    action: block
+    agents:
+      - profile/user
+    tools:
+      - order_create_limit
+    conditions:
+      - field: arguments.side
+        operator: equals
+        value: buy
+      - field: arguments.price
+        operator: greater_than
+        value: 0.97
+
+  - id: user-block-extreme-sell-price
+    name: Block limit sells at price < $0.03
+    description: >
+      Selling at 3c or below means accepting near-total loss of principal.
+      An agent should never dump a position at near-zero prices autonomously.
+    enabled: true
+    severity: high
+    action: block
+    agents:
+      - profile/user
+    tools:
+      - order_create_limit
+    conditions:
+      - field: arguments.side
+        operator: equals
+        value: sell
+      - field: arguments.price
+        operator: less_than
+        value: 0.03
+
+  # ── TRADING HOURS ─────────────────────────────────────────────────────────
+
+  - id: user-off-hours-approval
+    name: Require approval for off-hours or weekend trading
+    description: >
+      Require human sign-off for trades placed outside 6am–11pm ET on
+      weekdays, or any time on weekends. Agents acting on stale news,
+      low-liquidity overnight books, or anomalous weekend conditions
+      should not be executing autonomously.
+    enabled: true
+    severity: medium
+    action: require_approval
+    agents:
+      - profile/user
+    tools:
+      - order_create_limit
+      - order_market
+    condition_groups:
+      - # Weekday off-hours: before 6am or after 11pm ET
+        - field: arguments.timestamp
+          operator: outside_hours
+          value:
+            start: "06:00"
+            end: "23:00"
+            timezone: "America/New_York"
+            days: [mon, tue, wed, thu, fri]
+      - # Any time on weekends
+        - field: arguments.timestamp
+          operator: within_hours
+          value:
+            start: "00:00"
+            end: "23:59"
+            timezone: "America/New_York"
+            days: [sat, sun]
+
+  # ── INFRASTRUCTURE PROTECTION ─────────────────────────────────────────────
+
+  - id: user-block-cancel-all
+    name: Block bulk order cancellation
+    description: >
+      Wiping all open orders in a single call can silently disrupt a
+      running strategy. This is always a manual operation.
+    enabled: true
+    severity: critical
+    action: block
+    agents:
+      - profile/user
+    tools:
+      - order_cancel_all
+
+  - id: user-block-approve-set
+    name: Block on-chain contract approvals
+    description: >
+      Modifying on-chain USDC/CTF allowances is an irreversible wallet
+      operation that should never happen autonomously.
+    enabled: true
+    severity: critical
+    action: block
+    agents:
+      - profile/user
+    tools:
+      - approve_set
+
+  - id: user-block-ctf-ops
+    name: Block raw CTF operations
+    description: >
+      Conditional token split/merge/redeem bypass the CLOB entirely
+      and have no safety net. Always blocked for autonomous agents.
+    enabled: true
+    severity: critical
+    action: block
+    agents:
+      - profile/user
+    tools:
+      - ctf_split
+      - ctf_merge
+      - ctf_redeem
