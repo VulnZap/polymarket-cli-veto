@@ -141,6 +141,11 @@ async function main(): Promise<void> {
   const startup = runtime.getStartupInfo();
   process.stderr.write(`Polymarket Veto MCP | profile=${String(startup.profile)} | transport=${String(startup.transport)}\n`);
   process.stderr.write(`Simulation default=${String(startup.simulationDefault)} | liveAllowed=${String(startup.allowLiveTrades)}\n`);
+  if (startup.binaryAvailable === true) {
+    process.stderr.write(`Polymarket binary=${String(startup.binaryResolvedPath)} (source=${String(startup.binarySource)})\n`);
+  } else {
+    process.stderr.write("Polymarket binary unavailable. Run 'polymarket-veto-mcp doctor' for setup help.\n");
+  }
 
   if (resolved.config.mcp.transport === 'sse') {
     await serveSse(runtime, { simulationOverride });

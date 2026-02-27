@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "polymarket-veto": {
+      "command": "npm",
+      "args": [
+        "exec",
+        "--yes",
+        "--prefix",
+        "/tmp",
+        "--package",
+        "@plawio/polymarket-veto-mcp",
+        "--",
+        "polymarket-veto-mcp",
+        "serve",
+        "--policy-profile",
+        "defaults"
+      ]
+    }
+  }
+}

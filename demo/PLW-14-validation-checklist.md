@@ -5,7 +5,7 @@
 - [ ] `polymarket --version` works locally.
 - [ ] `veto-agent/polymarket-veto.config.yaml` exists and profile is set.
 - [ ] `veto/veto.config.yaml` uses `validation.mode: local` for offline demo stability.
-- [ ] `npx @plawio/polymarket-veto-mcp print-tools` returns expected tool set.
+- [ ] `npx -y @plawio/polymarket-veto-mcp print-tools` returns expected tool set.
 
 ## Functional checks
 
