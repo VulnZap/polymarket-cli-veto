@@ -56,7 +56,7 @@ polymarket approve set
 This fork ships a guarded MCP runtime for AI agents:
 
 - Directory: `veto-agent/`
-- Package: `@vulnzap/polymarket-veto-mcp`
+- Package: `@plawio/polymarket-veto-mcp`
 - Default posture: read-heavy, simulation-first, policy-gated mutations
 - Tagline: **Polymarket CLI, but safe for agents.**
 
@@ -67,15 +67,15 @@ This fork ships a guarded MCP runtime for AI agents:
 polymarket --version
 
 # 2) Start guarded MCP runtime (stdio transport by default)
-npx @vulnzap/polymarket-veto-mcp serve
+npx @plawio/polymarket-veto-mcp serve
 ```
 
 ### High-signal test commands
 
 ```bash
-npx @vulnzap/polymarket-veto-mcp doctor
-npx @vulnzap/polymarket-veto-mcp print-tools
-npx @vulnzap/polymarket-veto-mcp print-config
+npx @plawio/polymarket-veto-mcp doctor
+npx @plawio/polymarket-veto-mcp print-tools
+npx @plawio/polymarket-veto-mcp print-config
 ```
 
 ### Policy profiles (included)
@@ -87,7 +87,7 @@ npx @vulnzap/polymarket-veto-mcp print-config
 Switch profile at runtime:
 
 ```bash
-npx @vulnzap/polymarket-veto-mcp serve --policy-profile defaults
+npx @plawio/polymarket-veto-mcp serve --policy-profile defaults
 ```
 
 ### Cloud mode (optional)

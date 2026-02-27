@@ -1,6 +1,6 @@
 {
-  "name": "@vulnzap/polymarket-veto-mcp",
-  "version": "0.1.1",
+  "name": "@plawio/polymarket-veto-mcp",
+  "version": "0.1.2",
   "description": "Guarded MCP sidecar for Polymarket CLI powered by Veto",
   "type": "module",
   "main": "dist/index.js",

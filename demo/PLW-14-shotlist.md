@@ -1,7 +1,7 @@
 # PLW-14 Shot List (30 Seconds)
 
 1. Open terminal and start guarded MCP sidecar:
-   - `npx @vulnzap/polymarket-veto-mcp serve --policy-profile defaults`
+   - `npx @plawio/polymarket-veto-mcp serve --policy-profile defaults`
 2. Show MCP `tools/list` response including both read-only and mutating tools.
 3. Execute read-only market lookup (`markets_search`) and show success.
 4. Execute dangerous mutation (`order_market` with amount 80) and show approval-required/deny response.

@@ -1,4 +1,4 @@
-# @vulnzap/polymarket-veto-mcp
+# @plawio/polymarket-veto-mcp
 
 Guarded MCP sidecar for Polymarket CLI powered by Veto.
 
@@ -15,7 +15,7 @@ Tagline: **Polymarket CLI, but safe for agents.**
 ## Install and run
 
 ```bash
-npx @vulnzap/polymarket-veto-mcp serve
+npx @plawio/polymarket-veto-mcp serve
 ```
 
 By default this starts stdio MCP transport with:
@@ -27,14 +27,14 @@ By default this starts stdio MCP transport with:
 ## Commands
 
 ```bash
-npx @vulnzap/polymarket-veto-mcp serve \
+npx @plawio/polymarket-veto-mcp serve \
   --policy-profile defaults \
   --simulation on \
   --transport stdio
 
-npx @vulnzap/polymarket-veto-mcp doctor
-npx @vulnzap/polymarket-veto-mcp print-tools
-npx @vulnzap/polymarket-veto-mcp print-config
+npx @plawio/polymarket-veto-mcp doctor
+npx @plawio/polymarket-veto-mcp print-tools
+npx @plawio/polymarket-veto-mcp print-config
 ```
 
 ## Tool set
